@@ -1,0 +1,22 @@
+{
+  "name": "livefeed-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "gsiou",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "jsonwebtoken": "^7.3.0",
+    "mongoose": "^4.8.6",
+    "morgan": "^1.8.1",
+    "node-feedparser": "^1.0.1",
+    "promise": "^7.1.1",
+    "request": "^2.81.0"
+  }
+}
