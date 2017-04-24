@@ -222,7 +222,7 @@ app.post('/authenticate', function(req, res){
                 res.json({success: false, message: 'Invalid email/password combination'});
             } else {
                 var token = jwt.sign({email: user.email}, app.get('secret'), {
-                    expiresIn: '24h'
+                    expiresIn: '7d'
                 });
 
                 res.json({
