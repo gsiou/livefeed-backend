@@ -226,7 +226,7 @@ app.post('/authenticate', function(req, res){
                 });
 
                 res.json({
-                    success: 'true',
+                    success: true,
                     message: 'you are now logged in',
                     token: token
                 });
