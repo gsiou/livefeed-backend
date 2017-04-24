@@ -12,6 +12,7 @@ var User        = require('./models/user');
 var Feed        = require('./models/feed');
 var FeedParser  = require('feedparser');
 var request     = require('request');
+var cors        = require('cors');
 
 
 var port = process.env.PORT || 8080;
@@ -21,6 +22,7 @@ app.set('secret', config.secret);
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 app.use(morgan('dev'));
+app.use(cors());
 
 var protectedRoutes = express.Router();
 
@@ -30,7 +32,7 @@ protectedRoutes.get('/', function(req, res) {
 
 protectedRoutes.get('/feeds', function(req, res) {
     var userEmail = req.decoded.email;
-    
+
     // Returns feeds of user
     User.findOne({email: userEmail}, function(err, user) {
         return res.json({feeds: user.feeds});
@@ -79,7 +81,7 @@ protectedRoutes.post('/feed', function(req, res) {
 
             reqFeed.on('response', function (res) {
                 var stream = this;
-                
+
                 if (res.statusCode !== 200) {
                     this.emit('error', new Error('Bad status code'));
                 }
@@ -93,7 +95,7 @@ protectedRoutes.post('/feed', function(req, res) {
                 console.log(error);
                 return res.status(422).send("Url is not a feed");
             });
-            
+
             feedparser.on('readable', function () {
                 var stream = this;
                 var meta = this.meta;
@@ -102,7 +104,7 @@ protectedRoutes.post('/feed', function(req, res) {
                 var feedDescription = this.meta.description;
                 console.log(feedName);
                 console.log(feedDescription);
-                
+
                 var newFeed = new Feed({
                     url: feedUrl,
                     name: feedName,
@@ -117,14 +119,14 @@ protectedRoutes.post('/feed', function(req, res) {
                     else {
                         addFeedToUser(req, res, feed);
                     }
-                }); 
+                });
             });
         }
         else {
             addFeedToUser(req, res, feed);
         }
     });
-    
+
 });
 
 const addFeedToUser = function(req, res, feed) {
@@ -145,13 +147,13 @@ const addFeedToUser = function(req, res, feed) {
                 return res.status(400).json({message: 'Feed already exists'});
             }
         }
-        
+
         user.feeds.push({
             url: feed.url,
             name: feed.name,
             description: feed.description
         });
-        
+
         user.save(function(error, user, rows) {
             if(error) {
                 // Handle this
@@ -180,7 +182,7 @@ app.use('/api/*', function(req, res, next) {
 
 
     console.log("Trying to verify token: " + token);
-    
+
     if(!token) {
         return res.status(403).send({
             verified: false,
@@ -248,10 +250,10 @@ app.post('/register', function(req, res) {
 
         // Create random salt
         var salt = bcrypt.genSaltSync(10);
-        
+
         // Hash password + salt
         var hashed_password = bcrypt.hashSync(req.body.password, salt);
-        
+
         // Create new user.
         var newUser = new User({
             email: req.body.email,
