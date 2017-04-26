@@ -27,15 +27,14 @@ app.use(cors());
 var protectedRoutes = express.Router();
 
 protectedRoutes.get('/', function(req, res) {
-    res.json({message: "Hello World"});
+    return res.json({message: "Hello World"});
 });
 
 protectedRoutes.get('/feeds', function(req, res) {
     var userEmail = req.decoded.email;
-
     // Returns feeds of user
     User.findOne({email: userEmail}, function(err, user) {
-        return res.json({feeds: user.feeds});
+        return res.send({feeds: user.feeds});
     });
 });
 
@@ -70,29 +69,28 @@ protectedRoutes.post('/feed', function(req, res) {
             // Parse given feed information and validate
             var feedUrl = req.body.url;
 
-            //...node-feedparser magic...
-            var reqFeed = request(feedUrl);
             var feedparser = new FeedParser();
-
-            reqFeed.on('error', function (error) {
-                // handle any request errors
-                console.log(error);
-            });
-
-            reqFeed.on('response', function (res) {
-                var stream = this;
-
-                if (res.statusCode !== 200) {
-                    this.emit('error', new Error('Bad status code'));
-                }
-                else {
-                    stream.pipe(feedparser);
-                }
-            });
+            try {
+                request
+                    .get(feedUrl)
+                    .on('error', function(err) {
+                        console.log(error);
+                        return res.status(400).send("Url does not exist");
+                    })
+                    .on('response', function(res) {
+                        if (res.statusCode !== 200) {
+                            this.emit('error', new Error('Bad status code'));
+                        }
+                        else {
+                            this.pipe(feedparser);
+                        }
+                    });
+            } catch (e) {
+                return res.status(400).send("Could not send a request to the url given");
+            }
 
             feedparser.on('error', function (error) {
                 // always handle errors
-                console.log(error);
                 return res.status(422).send("Url is not a feed");
             });
 
@@ -102,8 +100,6 @@ protectedRoutes.post('/feed', function(req, res) {
 
                 var feedName = this.meta.title;
                 var feedDescription = this.meta.description;
-                console.log(feedName);
-                console.log(feedDescription);
 
                 var newFeed = new Feed({
                     url: feedUrl,
@@ -131,18 +127,14 @@ protectedRoutes.post('/feed', function(req, res) {
 
 const addFeedToUser = function(req, res, feed) {
     var userEmail = req.decoded.email;
-    console.log(userEmail);
     // Add a new feed to user
     User.findOne({email: userEmail}, function(err, user) {
         if(err) {
-            console.log(err);
             return res.status(400).json({
                 message: 'Invalid user',
                 success: false
             });
         }
-        console.log(userEmail);
-        console.log(user);
 
         // Check if user already has feed
         for(var i = 0; i < user.feeds.length; i++) {
@@ -162,11 +154,10 @@ const addFeedToUser = function(req, res, feed) {
 
         user.save(function(error, user, rows) {
             if(error) {
-                // Handle this
+                // TODO: Handle this
                 console.log(error);
             }
             else {
-                console.log(user);
                 return res.json({success: true});
             }
         });
