@@ -136,7 +136,10 @@ const addFeedToUser = function(req, res, feed) {
     User.findOne({email: userEmail}, function(err, user) {
         if(err) {
             console.log(err);
-            return res.status(400).json({message: 'Invalid user'});
+            return res.status(400).json({
+                message: 'Invalid user',
+                success: false
+            });
         }
         console.log(userEmail);
         console.log(user);
@@ -144,7 +147,10 @@ const addFeedToUser = function(req, res, feed) {
         // Check if user already has feed
         for(var i = 0; i < user.feeds.length; i++) {
             if(user.feeds[i].url === feed.url) {
-                return res.status(400).json({message: 'Feed already exists'});
+                return res.status(400).json({
+                    message: 'Feed already exists',
+                    success: false
+                });
             }
         }
 
