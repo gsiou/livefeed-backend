@@ -38,23 +38,69 @@ protectedRoutes.get('/feeds', function(req, res) {
     });
 });
 
-/*
-protectedRoutes.get('/latestFeeds', function(req, res) {
-    // Find latest feeds of user
-    if(req.body.feedCount === undefined) {
+protectedRoutes.get('/articles', function(req, res) {
+    if (req.query.url === undefined) {
         return res.status(412).send({
-            message: "Specify feed number"
+            message: "Missing url",
+            articles: []
         });
     }
 
-    // Get current user
-    User.findOne({email: req.decoded.email}, function(err, user){
-        var currentUser = user;
+    Feed.findOne({url: req.query.url}, function(err, feed) {
+        var articles = [];
 
-        // Get articles from each feed
+        if(!feed) {
+            return res.status(400).send({
+                message: "Invalid feed",
+                articles: []
+            });
+        } else {
+            // Return articles of feed
+            var feedUrl = req.query.url;
+
+            var feedparser = new FeedParser();
+            try {
+                request
+                    .get(feedUrl)
+                    .on('error', function(err) {
+                        return res.status(400).send("Url does not exist");
+                    })
+                    .on('response', function(res) {
+                        if (res.statusCode !== 200) {
+                            this.emit('error', new Error('Bad status code'));
+                        }
+                        else {
+                            this.pipe(feedparser);
+                        }
+                    });
+            } catch (e) {
+                return res.status(400).send("Could not send a request to the url given");
+            }
+
+            feedparser.on('error', function (error) {
+                return res.status(422).send("Url is not a feed");
+            });
+
+            feedparser.on('readable', function () {
+                var stream = this;
+                var meta = this.meta;
+
+                var feedName = this.meta.title;
+                var feedDescription = this.meta.description;
+                var item;
+                while (item = stream.read()) {
+                    articles.push(item);
+                }
+            });
+
+            feedparser.on('end', function() {
+                return res.send({
+                    articles: articles
+                });
+            });
+        }
     });
 });
-*/
 
 protectedRoutes.post('/feed', function(req, res) {
     if(req.body.url === undefined) {
@@ -139,7 +185,7 @@ const addFeedToUser = function(req, res, feed) {
         // Check if user already has feed
         for(var i = 0; i < user.feeds.length; i++) {
             if(user.feeds[i].url === feed.url) {
-                return res.status(400).json({
+                return res.status(200).json({
                     message: 'Feed already exists',
                     success: false
                 });
