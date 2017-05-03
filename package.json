@@ -19,7 +19,8 @@
     "morgan": "^1.8.1",
     "node-feedparser": "^1.0.1",
     "promise": "^7.1.1",
-    "request": "^2.81.0"
+    "request": "^2.81.0",
+    "sanitize-html": "^1.14.1"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"

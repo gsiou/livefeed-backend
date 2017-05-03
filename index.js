@@ -1,18 +1,19 @@
-var express     = require('express');
-var app         = express();
-var bcrypt      = require('bcryptjs');
-var bodyParser  = require('body-parser');
-var crypto      = require('crypto');
-var morgan      = require('morgan');
-var mongoose    = require('mongoose');
-var jwt         = require('jsonwebtoken');
-var morgan      = require('morgan');
-var config      = require('./config');
-var User        = require('./models/user');
-var Feed        = require('./models/feed');
-var FeedParser  = require('feedparser');
-var request     = require('request');
-var cors        = require('cors');
+var express      = require('express');
+var app          = express();
+var bcrypt       = require('bcryptjs');
+var bodyParser   = require('body-parser');
+var crypto       = require('crypto');
+var morgan       = require('morgan');
+var mongoose     = require('mongoose');
+var jwt          = require('jsonwebtoken');
+var morgan       = require('morgan');
+var config       = require('./config');
+var User         = require('./models/user');
+var Feed         = require('./models/feed');
+var FeedParser   = require('feedparser');
+var request      = require('request');
+var cors         = require('cors');
+var sanitizeHtml = require('sanitize-html');
 
 
 var port = process.env.PORT || 8080;
@@ -89,6 +90,10 @@ protectedRoutes.get('/articles', function(req, res) {
                 var feedDescription = this.meta.description;
                 var item;
                 while (item = stream.read()) {
+                    item.summary = sanitizeHtml(item.summary, {
+                        allowedTags: [],
+                        allowedAttributes: []
+                    });
                     articles.push(item);
                 }
             });
