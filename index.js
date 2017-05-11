@@ -39,6 +39,58 @@ protectedRoutes.get('/feeds', function(req, res) {
     });
 });
 
+protectedRoutes.get('/alerts', function(req, res) {
+    var userEmail = req.decoded.email;
+    User.findOne({email: userEmail}, function(err, user) {
+        if(!user) {
+            return res.status(400).send({
+                message: "Invalid user",
+                alerts: [],
+                success: false
+            });
+        }
+        else {
+            return res.send({
+                message: "",
+                alerts: user.alerts,
+                success: true
+            })
+        }
+    });
+});
+
+protectedRoutes.post('/alert', function(req, res) {
+    if(!req.body.alert) {
+        return res.status(400).send({message: "Alert not given", success: false});
+    }
+    var newAlert = req.body.alert;
+    var userEmail = req.decoded.email;
+    // Check if alert already exists
+    User.findOne({email: userEmail}, function(err, user) {
+        if(!user) {
+            return res.status(400).send({message: "Invalid user", success: false});
+        }
+        else {
+            for(var i = 0; i < user.alerts.length; i++) {
+                if(user.alerts[i] === newAlert) {
+                    res.send({message: "Alert already exists", success: false});
+                }
+            }
+
+            user.alerts.push(newAlert);
+            user.save(function(error, user, rows) {
+                if(error) {
+                    // TODO: Handle this
+                    console.log(error);
+                }
+                else {
+                    return res.json({success: true});
+                }
+            });
+        }
+    });
+});
+
 protectedRoutes.get('/articles', function(req, res) {
     if (req.query.url === undefined) {
         return res.status(412).send({
