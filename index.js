@@ -159,6 +159,37 @@ protectedRoutes.get('/articles', function(req, res) {
     });
 });
 
+protectedRoutes.delete('/feed', function(req, res) {
+    if(req.body.url === undefined) {
+        return res.status(412).send({
+            message: "Missing name or url"
+        });
+    }
+
+    var userEmail = req.decoded.email;
+    User.update({email: userEmail}, {$pull: {feeds: {url: [req.body.url]}}}, {}, function(err, mod) {
+        if(err) {
+            return res.status(400).json({
+                message: err,
+                success: false
+            });
+        }
+        else if(mod.nModified === 0) {
+            return res.status(200).json({
+                message: "User does not have specified feed",
+                success: false
+            });
+        }
+        else {
+            console.log(mod);
+            return res.status(200).json({
+                message: "Feed deleted",
+                success: true
+            });
+        }
+    })
+});
+
 protectedRoutes.post('/feed', function(req, res) {
     if(req.body.url === undefined) {
         return res.status(412).send({
