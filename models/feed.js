@@ -9,10 +9,12 @@ var Feed = mongoose.model('Feed', new Schema({
     },
     name: {
         type: String,
-        unique: true
     },
     description: {
         type: String
+    },
+    subscribers: {
+        type: Number
     }
 }));
 
