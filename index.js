@@ -15,7 +15,6 @@ var request      = require('request');
 var cors         = require('cors');
 var sanitizeHtml = require('sanitize-html');
 
-
 var port = process.env.PORT || 8080;
 mongoose.connect(config.database);
 app.set('secret', config.secret);
@@ -36,6 +35,7 @@ protectedRoutes.get('/feeds', function(req, res) {
     // Returns feeds of user
     User.findOne({email: userEmail}, function(err, user) {
         return res.send({feeds: user.feeds});
+
     });
 });
 
@@ -80,8 +80,7 @@ protectedRoutes.post('/alert', function(req, res) {
             user.alerts.push(newAlert);
             user.save(function(error, user, rows) {
                 if(error) {
-                    // TODO: Handle this
-                    console.log(error);
+                    return res.status(500).send({message: error, success: false});
                 }
                 else {
                     return res.json({success: true});
@@ -200,6 +199,7 @@ protectedRoutes.post('/feed', function(req, res) {
     // Check if feed exists
     Feed.findOne({url: req.body.url}, function(err, feed){
         if(!feed) {
+            console.log("Feed does not exist");
             // Parse given feed information and validate
             var feedUrl = req.body.url;
 
@@ -288,11 +288,13 @@ const addFeedToUser = function(req, res, feed) {
 
         user.save(function(error, user, rows) {
             if(error) {
-                // TODO: Handle this
-                console.log(error);
+                return res.status(500).send({message: error, success: false});                
             }
             else {
-                return res.json({success: true});
+                // update feed subscribers
+                Feed.update({url: feed.url}, {$inc: {subscribers: 1}}, {}, function() {
+                    return res.json({success: true});
+                });
             }
         });
     });
@@ -401,8 +403,7 @@ app.post('/register', function(req, res) {
             res.json({success: true});
         });
     }).catch(function(error){
-        // TODO: fix this
-        console.log(error);
+        return res.status(500).send({message: error, success: false});        
     });
 });
 
