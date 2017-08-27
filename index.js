@@ -1,19 +1,22 @@
-var express      = require('express');
-var app          = express();
-var bcrypt       = require('bcryptjs');
-var bodyParser   = require('body-parser');
-var crypto       = require('crypto');
-var morgan       = require('morgan');
-var mongoose     = require('mongoose');
-var jwt          = require('jsonwebtoken');
-var morgan       = require('morgan');
-var config       = require('./config');
-var User         = require('./models/user');
-var Feed         = require('./models/feed');
-var FeedParser   = require('feedparser');
-var request      = require('request');
-var cors         = require('cors');
-var sanitizeHtml = require('sanitize-html');
+var express           = require('express');
+var app               = express();
+var bcrypt            = require('bcryptjs');
+var bodyParser        = require('body-parser');
+var crypto            = require('crypto');
+var morgan            = require('morgan');
+var mongoose          = require('mongoose');
+var jwt               = require('jsonwebtoken');
+var morgan            = require('morgan');
+var config            = require('./config');
+var User              = require('./models/user');
+var Feed              = require('./models/feed');
+var FeedParser        = require('feedparser');
+var FeedParserWrapper = require('./FeedParser');
+var request           = require('request');
+var cors              = require('cors');
+var sanitizeHtml      = require('sanitize-html');
+var GetFeeds          = require('./GetFeeds.js');
+var url               = require('url');
 
 var port = process.env.PORT || 8080;
 mongoose.connect(config.database);
@@ -196,67 +199,57 @@ protectedRoutes.post('/feed', function(req, res) {
         });
     }
 
-    // Check if feed exists
-    Feed.findOne({url: req.body.url}, function(err, feed){
-        if(!feed) {
-            console.log("Feed does not exist");
-            // Parse given feed information and validate
-            var feedUrl = req.body.url;
+    var possibleFeeds = [req.body.url];
 
-            var feedparser = new FeedParser();
-            try {
-                request
-                    .get(feedUrl)
-                    .on('error', function(err) {
-                        console.log(error);
-                        return res.status(400).send("Url does not exist");
-                    })
-                    .on('response', function(res) {
-                        if (res.statusCode !== 200) {
-                            this.emit('error', new Error('Bad status code'));
+    // Get content of url given
+    request(req.body.url, (err, resp, body) => {
+        if(err) {
+            // TODO: add http where needed
+            return;
+        }
+
+        // Gather all possible feeds
+        var linkTags = GetFeeds.getFeedsOfRels(GetFeeds.getRels(body)).map(l => l.href);
+        var aTags = GetFeeds.getFeedsOfLinks(GetFeeds.getLinks(body)).map(a => a.href);
+        if(linkTags.length > 0) {
+            possibleFeeds.push(linkTags[0]);
+        }
+        var limit = Math.min(2, aTags.length); // Get 2 or less from aTags
+        possibleFeeds = possibleFeeds.concat(aTags.slice(0, limit));
+
+        var feedsPromises = possibleFeeds.map((possibleFeed) => {
+            return FeedParserWrapper.getFeedInfo(url.resolve(req.body.url, possibleFeed));
+        });
+
+        // Check all links at the same time and keep the first that works
+        // Inverting idea by: https://stackoverflow.com/a/39941616
+        const invert  = p  => new Promise((res, rej) => p.then(rej, res));
+        const firstOf = ps => invert(Promise.all(ps.map(invert)));
+        firstOf(feedsPromises).then((feedInfo) => {
+            Feed.findOne({url: feedInfo.url}, function(err, feed) {
+                if(!feed) {
+                    feedInfo.save(function(error, feed, rows) {
+                        if(error) {
+                            // Handle this
+                            console.log(error);
                         }
                         else {
-                            this.pipe(feedparser);
+                            addFeedToUser(req, res, feed);
                         }
                     });
-            } catch (e) {
-                return res.status(400).send("Could not send a request to the url given");
-            }
-
-            feedparser.on('error', function (error) {
-                // always handle errors
-                return res.status(422).send("Url is not a feed");
+                }
+                else {
+                    addFeedToUser(req, res, feed);
+                }
             });
-
-            feedparser.on('readable', function () {
-                var stream = this;
-                var meta = this.meta;
-
-                var feedName = this.meta.title;
-                var feedDescription = this.meta.description;
-
-                var newFeed = new Feed({
-                    url: feedUrl,
-                    name: feedName,
-                    description: feedDescription
-                });
-
-                newFeed.save(function(error, feed, rows) {
-                    if(error) {
-                        // Handle this
-                        console.log(error);
-                    }
-                    else {
-                        addFeedToUser(req, res, feed);
-                    }
-                });
+        })
+        .catch((error) => {
+            return res.status(400).json({
+                message: error,
+                success: false
             });
-        }
-        else {
-            addFeedToUser(req, res, feed);
-        }
+        });
     });
-
 });
 
 const addFeedToUser = function(req, res, feed) {
@@ -288,7 +281,7 @@ const addFeedToUser = function(req, res, feed) {
 
         user.save(function(error, user, rows) {
             if(error) {
-                return res.status(500).send({message: error, success: false});                
+                return res.status(500).send({message: error, success: false});
             }
             else {
                 // update feed subscribers
@@ -403,7 +396,7 @@ app.post('/register', function(req, res) {
             res.json({success: true});
         });
     }).catch(function(error){
-        return res.status(500).send({message: error, success: false});        
+        return res.status(500).send({message: error, success: false});
     });
 });
 
