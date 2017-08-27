@@ -35,6 +35,11 @@ describe('GetFeeds', function() {
             var feedsFound = GetFeeds.getFeedsOfLinks(links).length;
             assert.equal(feedsFound, 1);
         });
+        it('should not return something if it does not have the rss or feed keywords', function() {
+            var links  = GetFeeds.getLinks("<a href='http://example.com/random.php'>Another random link</a>");
+            var feedsFound = GetFeeds.getFeedsOfLinks(links).length;
+            assert.equal(feedsFound, 0);
+        });
     });
     describe('getRels', function() {
         it('should find a <link> in hardcoded html', function() {
