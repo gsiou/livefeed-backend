@@ -17,6 +17,7 @@ var cors              = require('cors');
 var sanitizeHtml      = require('sanitize-html');
 var GetFeeds          = require('./GetFeeds.js');
 var url               = require('url');
+var normalizeUrl      = require('normalize-url');
 
 var port = process.env.PORT || 8080;
 mongoose.connect(config.database);
@@ -199,13 +200,16 @@ protectedRoutes.post('/feed', function(req, res) {
         });
     }
 
-    var possibleFeeds = [req.body.url];
+    var givenUrl = normalizeUrl(req.body.url);
+    var possibleFeeds = [givenUrl];
 
     // Get content of url given
-    request(req.body.url, (err, resp, body) => {
+    request(givenUrl, (err, resp, body) => {
         if(err) {
-            // TODO: add http where needed
-            return;
+            return res.status(400).send({
+                "message": err,
+                "success": false
+            });
         }
 
         // Gather all possible feeds
@@ -218,7 +222,7 @@ protectedRoutes.post('/feed', function(req, res) {
         possibleFeeds = possibleFeeds.concat(aTags.slice(0, limit));
 
         var feedsPromises = possibleFeeds.map((possibleFeed) => {
-            return FeedParserWrapper.getFeedInfo(url.resolve(req.body.url, possibleFeed));
+            return FeedParserWrapper.getFeedInfo(url.resolve(givenUrl, possibleFeed));
         });
 
         // Check all links at the same time and keep the first that works
