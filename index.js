@@ -20,7 +20,12 @@ var url = require('url')
 var normalizeUrl = require('normalize-url')
 
 var port = process.env.PORT || 8080
-mongoose.connect(config.database)
+
+mongoose.connect(config.database, (err) => {
+  console.log('DB Could not connect:', err.message)
+  process.exit(1)
+})
+
 app.set('secret', config.secret)
 
 app.use(bodyParser.urlencoded({extended: false}))
