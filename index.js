@@ -317,7 +317,7 @@ app.use('/api/*', function (req, res, next) {
   } else {
     jwt.verify(token, app.get('secret'), function (err, decoded) {
       if (err) {
-        return res.json({verified: false, message: 'Failed to verify token'})
+        return res.status(403).send({verified: false, message: 'Failed to verify token'})
       } else {
         req.decoded = decoded
         next()
