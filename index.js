@@ -151,6 +151,14 @@ protectedRoutes.get('/articles', function (req, res) {
             allowedTags: [],
             allowedAttributes: []
           })
+          resp_item = {
+            title: item.title,
+            description: item.description,
+            summary: item.summary,
+            author: item.author,
+            url: item.url,
+            pubdate: item.pubdate
+          }
           articles.push(item)
         }
       })
