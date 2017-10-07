@@ -18,8 +18,12 @@ function getFeedsOfLinks (links) {
   var feeds = links.filter(link => {
     var text = link.text.toLowerCase()
     var href = link.text.toLowerCase()
-    return text.indexOf('rss') !== -1 || text.indexOf('feed') !== -1 ||
-                href.indexOf('rss') !== -1 || href.indexOf('feed') !== -1
+    return (
+      text.indexOf('rss') !== -1 ||
+      text.indexOf('feed') !== -1 ||
+      href.indexOf('rss') !== -1 ||
+      href.indexOf('feed') !== -1
+    )
   })
   return feeds
 }

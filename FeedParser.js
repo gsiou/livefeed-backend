@@ -8,18 +8,18 @@ function getFeedInfo (feedUrl) {
     var feedparser = new FeedParser()
     try {
       request
-                .get(feedUrl)
-                .on('error', function (err) {
-                  console.log(error)
-                  reject(error)
-                })
-                .on('response', function (res) {
-                  if (res.statusCode !== 200) {
-                    this.emit('error', new Error('Bad status code'))
-                  } else {
-                    this.pipe(feedparser)
-                  }
-                })
+        .get(feedUrl)
+        .on('error', function (err) {
+          console.log(error)
+          reject(error)
+        })
+        .on('response', function (res) {
+          if (res.statusCode !== 200) {
+            this.emit('error', new Error('Bad status code'))
+          } else {
+            this.pipe(feedparser)
+          }
+        })
     } catch (e) {
       reject(e)
     }
