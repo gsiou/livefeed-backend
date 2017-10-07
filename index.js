@@ -156,7 +156,7 @@ protectedRoutes.get('/articles', function (req, res) {
             description: item.description,
             summary: item.summary,
             author: item.author,
-            url: item.url,
+            link: item.link,
             pubdate: item.pubdate
           }
           articles.push(respItem)
