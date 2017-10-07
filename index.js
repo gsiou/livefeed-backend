@@ -151,7 +151,7 @@ protectedRoutes.get('/articles', function (req, res) {
             allowedTags: [],
             allowedAttributes: []
           })
-          resp_item = {
+          const respItem = {
             title: item.title,
             description: item.description,
             summary: item.summary,
@@ -159,7 +159,7 @@ protectedRoutes.get('/articles', function (req, res) {
             url: item.url,
             pubdate: item.pubdate
           }
-          articles.push(item)
+          articles.push(respItem)
         }
       })
 
