@@ -7,7 +7,6 @@ var morgan = require('morgan')
 var mongoose = require('mongoose')
 var jwt = require('jsonwebtoken')
 var morgan = require('morgan')
-var config = require('./config')
 var User = require('./models/user')
 var Feed = require('./models/feed')
 var FeedParser = require('feedparser')
@@ -18,17 +17,20 @@ var sanitizeHtml = require('sanitize-html')
 var GetFeeds = require('./GetFeeds.js')
 var url = require('url')
 var normalizeUrl = require('normalize-url')
+var fs = require('fs')
+var https = require('https')
+require('dotenv').config()
 
 var port = process.env.PORT || 8080
 
-mongoose.connect(config.database, { useMongoClient: true }, err => {
+mongoose.connect(process.env.DB, { useMongoClient: true }, err => {
   if (err) {
     console.log('DB Could not connect:', err.message)
     process.exit(1)
   }
 })
 
-app.set('secret', config.secret)
+app.set('secret', process.env.SECRET)
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
@@ -432,4 +434,12 @@ app.post('/register', function (req, res) {
     })
 })
 
-app.listen(port)
+if (process.env.NODE_ENV === 'production') {
+  https.createServer({
+    key: fs.readFileSync(process.env.KEY_PATH),
+    cert: fs.readFileSync(process.env.CERT_PATH)
+  }, app).listen(port)
+}
+else {
+  app.listen(port)
+}
