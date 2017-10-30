@@ -435,11 +435,15 @@ app.post('/register', function (req, res) {
 })
 
 if (process.env.NODE_ENV === 'production') {
-  https.createServer({
-    key: fs.readFileSync(process.env.KEY_PATH),
-    cert: fs.readFileSync(process.env.CERT_PATH)
-  }, app).listen(port)
-}
-else {
+  https
+    .createServer(
+    {
+      key: fs.readFileSync(process.env.KEY_PATH),
+      cert: fs.readFileSync(process.env.CERT_PATH)
+    },
+      app
+    )
+    .listen(port)
+} else {
   app.listen(port)
 }
