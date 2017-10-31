@@ -12,25 +12,25 @@
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "body-parser": "^1.17.1",
+    "body-parser": "^1.18.2",
     "cheerio": "^1.0.0-rc.2",
-    "cors": "^2.8.3",
+    "cors": "^2.8.4",
     "dotenv": "^4.0.0",
-    "express": "^4.15.2",
-    "feedparser": "^2.2.1",
-    "jsonwebtoken": "^7.3.0",
-    "mongoose": "^4.8.6",
-    "morgan": "^1.8.1",
+    "express": "^4.16.2",
+    "feedparser": "^2.2.3",
+    "jsonwebtoken": "^8.1.0",
+    "mongoose": "^4.12.5",
+    "morgan": "^1.9.0",
     "node-feedparser": "^1.0.1",
     "normalize-url": "^1.9.1",
-    "promise": "^7.1.1",
-    "request": "^2.81.0",
-    "sanitize-html": "^1.14.1"
+    "promise": "^8.0.1",
+    "request": "^2.83.0",
+    "sanitize-html": "^1.15.0"
   },
   "devDependencies": {
-    "mocha": "^3.5.0",
-    "nodemon": "^1.11.0",
-    "prettier-standard": "^7.0.1",
+    "mocha": "^4.0.1",
+    "nodemon": "^1.12.1",
+    "prettier-standard": "^7.0.3",
     "standard": "^10.0.3"
   }
 }
