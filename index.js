@@ -371,7 +371,7 @@ app.post('/authenticate', function (req, res) {
         })
       } else {
         var hashed_password = bcrypt.hashSync(req.body.password, user.salt)
-        if (user.password != hashed_password) {
+        if (user.password !== hashed_password) {
           res.json({
             success: false,
             message: 'Invalid email/password combination'
